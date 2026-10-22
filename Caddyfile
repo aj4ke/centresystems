@@ -1,0 +1,25 @@
+# centresystems.info
+# Plain HTTP on :80. Cloudflare Tunnel handles HTTPS in front of this.
+:80 {
+	encode zstd gzip
+
+	# backend: game server status, GitHub repos
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	# notes folder: browse lets notes.html get the file list as JSON
+	handle /notes/* {
+		root * /var/www/centre
+		file_server browse
+	}
+
+	handle {
+		root * /var/www/centre
+		file_server
+	}
+
+	log {
+		output file /var/log/caddy/access.log
+	}
+}

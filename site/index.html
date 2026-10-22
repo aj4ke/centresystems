@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>centresystems.info</title>
+<script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="site" href="index.html">centresystems</a>
+  <nav>
+    <a class="cur" href="index.html">home</a>
+    <a href="projects.html">projects</a>
+    <a href="notes.html">notes</a>
+    <button id="theme" type="button">dark</button>
+  </nav>
+</header>
+
+<p>I'm Andrew Jacobson. I work on networks, embedded firmware, and Linux systems.</p>
+<p>This site runs on a small Proxmox cluster at home, along with the game servers below.</p>
+
+<h2 class="label">Projects</h2>
+<!-- hrefs use your GitHub repo names: projects.html?r=<repo> -->
+<ul class="list">
+  <li><a href="projects.html?r=encvr">encvr</a><span class="d">Encrypted peer-to-peer LoRa transceiver on ESP32 and FreeRTOS.</span></li>
+  <li><a href="projects.html?r=centre-sdn">centre-sdn</a><span class="d">SDN control plane in Go with an XDP/eBPF intrusion detection engine.</span></li>
+  <li><a href="projects.html?r=statbar">statbar</a><span class="d">ESP32 and a long, narrow TFT showing live PC metrics over USB.</span></li>
+  <li><a href="projects.html?r=chunkfast">chunkfast</a><span class="d">Fast Minecraft world generation, starting with interval culling.</span></li>
+</ul>
+<a class="more" href="projects.html">all projects</a>
+
+<h2 class="label">Game servers</h2>
+<!-- data-srv must match a key in SERVERS in api.js -->
+<ul class="list servers" id="servers">
+  <li data-srv="cs2"><span>cs2</span><span class="d">1v1 instant respawn by default, other modes with !modes.</span><span class="st">checking</span></li>
+  <li data-srv="ark"><span>ark</span><span class="d">Modded ASA on Ragnarok, PvE.</span><span class="st">checking</span></li>
+  <li data-srv="minecraft"><span>minecraft</span><span class="d">Ask for the address.</span><span class="st">checking</span></li>
+</ul>
+<div class="checked" id="checked"></div>
+
+<footer>
+  <a href="#">github</a>
+  <a href="mailto:you@centresystems.info">email</a>
+  <a href="#">resume</a>
+</footer>
+
+</div>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  var rows = document.querySelectorAll('#servers li[data-srv]');
+  var checked = document.getElementById('checked');
+
+  function paint(li, s) {
+    var st = li.querySelector('.st');
+    var state = (s && s.status) || 'unknown';
+    st.className = 'st ' + state;
+    if (state === 'up') {
+      st.textContent = s.players != null
+        ? s.players + (s.max != null ? '/' + s.max : '') + ' online'
+        : 'up';
+    } else {
+      st.textContent = state;
+    }
+  }
+
+  function poll() {
+    fetch('/api/status', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (data) {
+        rows.forEach(function (li) { paint(li, data.servers[li.dataset.srv]); });
+        checked.textContent = 'updated ' + new Date(data.updated * 1000).toLocaleTimeString();
+      })
+      .catch(function () {
+        rows.forEach(function (li) { paint(li, null); });
+        checked.textContent = 'status unavailable';
+      });
+  }
+
+  poll();
+  setInterval(poll, 30000);
+})();
+</script>
+</body>
+</html>

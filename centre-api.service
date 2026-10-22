@@ -1,0 +1,16 @@
+[Unit]
+Description=centresystems.info API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=centre
+Group=centre
+EnvironmentFile=/etc/centre/api.env
+ExecStart=/usr/bin/node /opt/centre/api.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

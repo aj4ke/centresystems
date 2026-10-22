@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>projects - centresystems.info</title>
+<script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="site" href="index.html">centresystems</a>
+  <nav>
+    <a href="index.html">home</a>
+    <a class="cur" href="projects.html">projects</a>
+    <a href="notes.html">notes</a>
+    <button id="theme" type="button">dark</button>
+  </nav>
+</header>
+
+<main id="main"><p class="msg">loading...</p></main>
+
+</div>
+<script src="assets/marked.js"></script>
+<script src="assets/purify.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  var main = document.getElementById('main');
+  var repo = new URLSearchParams(location.search).get('r');
+
+  function fail(text) { main.replaceChildren(el('p', { class: 'msg' }, text)); }
+
+  function meta(r) {
+    var bits = [];
+    if (r.language) bits.push(r.language);
+    bits.push('updated ' + shortDate(r.pushed));
+    if (r.stars) bits.push(r.stars + (r.stars === 1 ? ' star' : ' stars'));
+    return bits.join(' · ');
+  }
+
+  function showList() {
+    fetch('/api/repos')
+      .then(function (res) { if (!res.ok) throw 0; return res.json(); })
+      .then(function (data) {
+        var frag = document.createDocumentFragment();
+        frag.appendChild(el('h2', { class: 'label' }, 'Projects'));
+        if (!data.repos.length) { frag.appendChild(el('p', { class: 'msg' }, 'Nothing here yet.')); }
+        var ul = el('ul', { class: 'list' });
+        data.repos.forEach(function (r) {
+          var li = el('li');
+          li.appendChild(el('a', { href: 'projects.html?r=' + encodeURIComponent(r.name) }, r.name));
+          var d = el('span', { class: 'd' }, r.description || '');
+          d.appendChild(el('span', { class: 'meta' }, meta(r)));
+          li.appendChild(d);
+          ul.appendChild(li);
+        });
+        if (data.repos.length) frag.appendChild(ul);
+        var gh = el('a', { class: 'more', href: 'https://github.com/' + data.user }, 'github.com/' + data.user);
+        frag.appendChild(gh);
+        main.replaceChildren(frag);
+      })
+      .catch(function () { fail('Could not load projects.'); });
+  }
+
+  function showRepo(name) {
+    fetch('/api/readme/' + encodeURIComponent(name))
+      .then(function (res) {
+        if (res.status === 404) throw new Error('missing');
+        if (!res.ok) throw 0;
+        return res.json();
+      })
+      .then(function (data) {
+        var r = data.repo;
+        document.title = r.name + ' - centresystems.info';
+        var frag = document.createDocumentFragment();
+        frag.appendChild(el('a', { class: 'back', href: 'projects.html' }, '← projects'));
+        var pm = el('p', { class: 'pagemeta' });
+        pm.appendChild(el('a', { href: r.url }, 'view on github'));
+        pm.appendChild(document.createTextNode(' · ' + meta(r)));
+
+        var article = el('article', { class: 'md' });
+        if (data.markdown) {
+          var raw = 'https://raw.githubusercontent.com/' + data.user + '/' + r.name + '/HEAD/';
+          var blob = 'https://github.com/' + data.user + '/' + r.name + '/blob/HEAD/';
+          renderMarkdown(article, data.markdown, function (u, kind) {
+            u = u.replace(/^\.?\//, '');
+            return (kind === 'img' ? raw : blob) + u;
+          });
+          // READMEs usually start with their own title; show meta under it
+          var h1 = article.querySelector('h1');
+          if (h1 && h1 === article.firstElementChild) h1.after(pm); else article.prepend(pm);
+          if (!h1 || h1 !== article.firstElementChild) article.prepend(el('h1', {}, r.name));
+        } else {
+          article.appendChild(el('h1', {}, r.name));
+          article.appendChild(pm);
+          article.appendChild(el('p', {}, r.description || 'No README yet.'));
+        }
+        frag.appendChild(article);
+        main.replaceChildren(frag);
+      })
+      .catch(function (e) {
+        fail(e && e.message === 'missing' ? 'No project called "' + name + '".' : 'Could not load this project.');
+      });
+  }
+
+  if (repo) showRepo(repo); else showList();
+})();
+</script>
+</body>
+</html>

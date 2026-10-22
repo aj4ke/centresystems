@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# centre-apply - the only command the deploy runner may run as root (no arguments).
+#
+# Installed to /usr/local/sbin by setup.sh, never by CI, so a commit can't
+# change what runs as root. It installs the staged Caddyfile if it changed,
+# reloads Caddy, restarts the API, and fails the deploy if the site is down.
+
+set -euo pipefail
+
+STAGED=/opt/centre/Caddyfile
+LIVE=/etc/caddy/Caddyfile
+
+if [[ -f $STAGED ]] && ! cmp -s "$STAGED" "$LIVE"; then
+  caddy validate --config "$STAGED" --adapter caddyfile >/dev/null
+  install -m 644 -o root -g root "$STAGED" "$LIVE"
+  echo "Caddyfile updated"
+fi
+
+systemctl reload caddy
+systemctl restart centre-api
+
+code=000
+for _ in 1 2 3 4 5; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true)
+  [[ $code == 200 ]] && break
+  sleep 1
+done
+[[ $code == 200 ]] || { echo "site check failed (HTTP $code)" >&2; exit 1; }
+
+sleep 1
+if ! systemctl is-active -q centre-api; then
+  echo "centre-api is not running:" >&2
+  journalctl -u centre-api -n 20 --no-pager >&2
+  exit 1
+fi
+
+echo "deploy ok"
