@@ -1,5 +1,4 @@
 # centresystems.info
-# Plain HTTP on :80. Cloudflare Tunnel handles HTTPS in front of this.
 :80 {
 	encode zstd gzip
 
