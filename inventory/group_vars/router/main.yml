@@ -1,0 +1,3 @@
+---
+ansible_user: root
+openwrt_install_recommended_packages: true

@@ -1,0 +1,7 @@
+---
+zabbix_server_db_name: zabbix
+zabbix_server_db_user: zabbix
+zabbix_server_db_password: ""
+zabbix_server_frontend_name: "{{ inventory_hostname }}"
+zabbix_server_php_version: "8.4"
+zabbix_server_postgresql_version: "18"

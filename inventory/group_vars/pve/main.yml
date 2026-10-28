@@ -1,0 +1,86 @@
+---
+ansible_user: root
+
+pve_node_timezone: America/New_York
+pve_node_domain: "{{ lab_domain }}"
+pve_node_dns_search: "{{ lab_domain }}"
+pve_node_dns_servers:
+  - 192.168.1.1
+
+pve_node_packages:
+  - vim
+  - htop
+
+pve_node_reboot:
+  weekday: "0"
+  hour: "3"
+  minute: "0"
+
+pve_node_interfaces:
+  - name: lo
+    auto: true
+    method: loopback
+  - name: nic0
+    method: manual
+  - name: nic1
+    method: manual
+  - name: vmbr0
+    auto: true
+    method: static
+    options:
+      address: "{{ ansible_host }}/24"
+      gateway: 192.168.1.1
+      bridge-ports: nic0
+      bridge-stp: "off"
+      bridge-fd: "0"
+      bridge-vlan-aware: "yes"
+      bridge-vids: 2-4094
+
+sshd_permit_root_login: prohibit-password
+
+pve_node_apt_sources:
+  debian:
+    - Types: deb
+      URIs: http://deb.debian.org/debian/
+      Suites: trixie trixie-updates
+      Components: main contrib non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+    - Types: deb
+      URIs: http://security.debian.org/debian-security/
+      Suites: trixie-security
+      Components: main contrib non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+  proxmox:
+    - Types: deb
+      URIs: http://download.proxmox.com/debian/pve
+      Suites: trixie
+      Components: pve-no-subscription
+      Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+  pve-enterprise:
+    - Types: deb
+      Enabled: "no"
+      URIs: https://enterprise.proxmox.com/debian/pve
+      Suites: trixie
+      Components: pve-enterprise
+      Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+  ceph:
+    - Types: deb
+      Enabled: "no"
+      URIs: https://enterprise.proxmox.com/debian/ceph-squid
+      Suites: trixie
+      Components: enterprise
+      Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+
+pve_cluster_datacenter:
+  keyboard: en-us
+
+pve_cluster_storage:
+  - id: local
+    config:
+      path: /var/lib/vz
+      content: backup,import,iso,vztmpl
+  - id: tank
+    config:
+      pool: tank
+      content: images,rootdir
+      mountpoint: /tank

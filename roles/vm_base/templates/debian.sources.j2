@@ -1,0 +1,11 @@
+Types: deb
+URIs: http://deb.debian.org/debian/
+Suites: {{ vm_base_debian_suite }} {{ vm_base_debian_suite }}-updates
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://security.debian.org/debian-security/
+Suites: {{ vm_base_debian_suite }}-security
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

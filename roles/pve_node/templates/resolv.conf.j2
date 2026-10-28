@@ -1,0 +1,6 @@
+{% if pve_node_dns_search %}
+search {{ pve_node_dns_search }}
+{% endif %}
+{% for server in pve_node_dns_servers %}
+nameserver {{ server }}
+{% endfor %}

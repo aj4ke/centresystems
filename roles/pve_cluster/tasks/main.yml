@@ -1,0 +1,29 @@
+---
+- name: Reconcile datacenter options
+  ansible.builtin.include_tasks: reconcile.yml
+  vars:
+    pve_cluster_api_label: datacenter options
+    pve_cluster_api_path: /cluster/options
+    pve_cluster_api_config: "{{ pve_cluster_datacenter }}"
+
+- name: Reconcile storage
+  ansible.builtin.include_tasks: reconcile.yml
+  loop: "{{ pve_cluster_storage }}"
+  loop_control:
+    loop_var: storage
+    label: "{{ storage.id }}"
+  vars:
+    pve_cluster_api_label: storage {{ storage.id }}
+    pve_cluster_api_path: /storage/{{ storage.id }}
+    pve_cluster_api_config: "{{ storage.config }}"
+
+- name: Reconcile VM hardware
+  ansible.builtin.include_tasks: reconcile.yml
+  loop: "{{ pve_cluster_vms }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.vmid }} {{ vm.config.name }}"
+  vars:
+    pve_cluster_api_label: VM {{ vm.vmid }} ({{ vm.config.name }})
+    pve_cluster_api_path: /nodes/{{ vm.node }}/qemu/{{ vm.vmid }}/config
+    pve_cluster_api_config: "{{ vm.config }}"

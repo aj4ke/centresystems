@@ -1,0 +1,360 @@
+---
+openwrt_firewall:
+  - type: defaults
+    options:
+      syn_flood: '1'
+      input: REJECT
+      output: ACCEPT
+      forward: REJECT
+      drop_invalid: '1'
+  - type: zone
+    options:
+      name: lan
+      network:
+        - lan
+      input: ACCEPT
+      output: ACCEPT
+      forward: ACCEPT
+  - type: zone
+    options:
+      name: wan
+      network:
+        - wan
+        - wan6
+      input: REJECT
+      output: ACCEPT
+      forward: DROP
+      masq: '1'
+      mtu_fix: '1'
+      log: '1'
+      log_limit: 10/minute
+  - type: forwarding
+    options:
+      src: lan
+      dest: wan
+  - type: rule
+    options:
+      name: Allow-DHCP-Renew
+      src: wan
+      proto: udp
+      dest_port: '68'
+      target: ACCEPT
+      family: ipv4
+  - type: rule
+    options:
+      name: Allow-Ping
+      src: wan
+      proto: icmp
+      icmp_type: echo-request
+      family: ipv4
+      target: ACCEPT
+  - type: rule
+    options:
+      name: Allow-IGMP
+      src: wan
+      proto: igmp
+      family: ipv4
+      target: ACCEPT
+  - type: rule
+    options:
+      name: Allow-DHCPv6
+      src: wan
+      proto: udp
+      dest_port: '546'
+      family: ipv6
+      target: ACCEPT
+  - type: rule
+    options:
+      name: Allow-MLD
+      src: wan
+      proto: icmp
+      src_ip: fe80::/10
+      icmp_type:
+        - 130/0
+        - 131/0
+        - 132/0
+        - 143/0
+      family: ipv6
+      target: ACCEPT
+  - type: rule
+    options:
+      name: Allow-ICMPv6-Input
+      src: wan
+      proto: icmp
+      icmp_type:
+        - echo-request
+        - echo-reply
+        - destination-unreachable
+        - packet-too-big
+        - time-exceeded
+        - bad-header
+        - unknown-header-type
+        - router-solicitation
+        - neighbour-solicitation
+        - router-advertisement
+        - neighbour-advertisement
+      limit: 1000/sec
+      family: ipv6
+      target: ACCEPT
+  - type: rule
+    options:
+      name: Allow-ICMPv6-Forward
+      src: wan
+      dest: '*'
+      proto: icmp
+      icmp_type:
+        - echo-request
+        - echo-reply
+        - destination-unreachable
+        - packet-too-big
+        - time-exceeded
+        - bad-header
+        - unknown-header-type
+      limit: 1000/sec
+      family: ipv6
+      target: ACCEPT
+  - type: rule
+    options:
+      name: desktop-mgmt
+      src: wan
+      src_ip: '{{ vault_desktop_ip }}'
+      proto: tcp
+      dest_port: 22 80 443
+      target: ACCEPT
+      src_mac: '{{ vault_desktop_mac }}'
+  - type: rule
+    options:
+      name: desktop-to-lab
+      src: wan
+      dest: '*'
+      src_ip: '{{ vault_desktop_ip }}'
+      proto: all
+      target: ACCEPT
+      src_mac: '{{ vault_desktop_mac }}'
+  - type: rule
+    options:
+      name: macbook-mgmt
+      src: wan
+      src_mac: '{{ vault_macbook_mac }}'
+      proto: tcp
+      dest_port: 22 80 443
+      target: ACCEPT
+      src_ip: '{{ vault_macbook_ip }}'
+  - type: rule
+    options:
+      name: macbook-to-lab
+      src: wan
+      dest: '*'
+      src_mac: '{{ vault_macbook_mac }}'
+      proto: all
+      target: ACCEPT
+      src_ip: '{{ vault_macbook_ip }}'
+  - type: rule
+    options:
+      name: macbook-dns
+      src: wan
+      src_mac: '{{ vault_macbook_mac }}'
+      src_ip: '{{ vault_macbook_ip }}'
+      proto: tcp udp
+      dest_port: '53'
+      target: ACCEPT
+  - type: zone
+    options:
+      name: services
+      network:
+        - services
+      input: REJECT
+      output: ACCEPT
+      forward: REJECT
+  - type: rule
+    options:
+      name: services-dns
+      src: services
+      proto: tcp udp
+      dest_port: '53'
+      target: ACCEPT
+  - type: rule
+    options:
+      name: services-no-house
+      src: services
+      dest: wan
+      dest_ip: 10.0.0.0/24
+      proto: all
+      target: REJECT
+  - type: forwarding
+    options:
+      src: services
+      dest: wan
+  - type: forwarding
+    options:
+      src: lan
+      dest: services
+  - type: zone
+    options:
+      name: public
+      network: public
+      input: REJECT
+      output: ACCEPT
+      forward: REJECT
+  - type: rule
+    options:
+      name: public-dns
+      src: public
+      proto: tcp udp
+      dest_port: '53'
+      target: ACCEPT
+  - type: rule
+    options:
+      name: public-no-house
+      src: public
+      dest: wan
+      dest_ip: 10.0.0.0/24
+      proto: all
+      target: REJECT
+  - type: forwarding
+    options:
+      src: public
+      dest: wan
+  - type: forwarding
+    options:
+      src: lan
+      dest: public
+  - type: zone
+    options:
+      name: lab
+      network:
+        - lab
+      input: REJECT
+      output: ACCEPT
+      forward: REJECT
+  - type: rule
+    options:
+      name: lab-dns
+      src: lab
+      proto: tcp udp
+      dest_port: '53'
+      target: ACCEPT
+  - type: rule
+    options:
+      name: lab-no-house
+      src: lab
+      dest: wan
+      dest_ip: 10.0.0.0/24
+      proto: all
+      target: REJECT
+  - type: forwarding
+    options:
+      src: lab
+      dest: wan
+  - type: forwarding
+    options:
+      src: lan
+      dest: lab
+  - type: rule
+    options:
+      name: svc-to-mgmt
+      src: services
+      dest: lan
+      proto: tcp
+      dest_port: 10050 8006
+      target: ACCEPT
+  - type: rule
+    options:
+      name: svc-to-games
+      src: services
+      dest: public
+      proto: tcp
+      dest_port: '10050'
+      target: ACCEPT
+  - type: rule
+    options:
+      name: svc-to-lab
+      src: services
+      dest: lab
+      proto: tcp
+      dest_port: '10050'
+      target: ACCEPT
+  - type: redirect
+    options:
+      name: ark-game
+      target: DNAT
+      src: wan
+      src_dport: '7777'
+      dest: public
+      dest_ip: 192.168.30.10
+      dest_port: '7777'
+      proto: udp
+  - type: zone
+    options:
+      name: tailscale
+      input: ACCEPT
+      output: ACCEPT
+      forward: ACCEPT
+      network:
+        - tailscale
+  - type: forwarding
+    options:
+      src: tailscale
+      dest: lan
+  - type: forwarding
+    options:
+      src: tailscale
+      dest: services
+  - type: forwarding
+    options:
+      src: tailscale
+      dest: public
+  - type: forwarding
+    options:
+      src: tailscale
+      dest: lab
+  - type: redirect
+    options:
+      name: cs2-27015
+      src: wan
+      dest: public
+      proto: udp
+      src_dport: '27015'
+      dest_ip: 192.168.30.20
+      dest_port: '27015'
+      target: DNAT
+  - type: redirect
+    options:
+      name: cs2-27020
+      src: wan
+      dest: public
+      proto: udp
+      src_dport: '27020'
+      dest_ip: 192.168.30.20
+      dest_port: '27020'
+      target: DNAT
+  - type: rule
+    name: public_to_zbx
+    options:
+      name: public-to-zabbix
+      src: public
+      dest: services
+      dest_ip: 192.168.20.10
+      proto: tcp
+      dest_port: '10051'
+      target: ACCEPT
+  - type: rule
+    name: lab_to_zbx
+    options:
+      name: lab-to-zabbix
+      src: lab
+      dest: services
+      dest_ip: 192.168.20.10
+      proto: tcp
+      dest_port: '10051'
+      target: ACCEPT
+  - type: redirect
+    options:
+      name: Terraria
+      src: wan
+      src_dport: '7778'
+      dest: public
+      dest_ip: 192.168.30.40
+      dest_port: '7778'
+      proto: tcp
+      target: DNAT

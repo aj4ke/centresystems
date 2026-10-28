@@ -1,0 +1,26 @@
+---
+ansible_host: 192.168.30.20
+
+vm_base_mounts:
+  - path: /opt/cs2/cs2
+    src: LABEL=cs2data
+    fstype: ext4
+    opts: defaults,nofail
+    passno: "2"
+
+compose_stack_name: cs2
+compose_stack_dir: /opt/cs2
+compose_stack_files:
+  - path: docker-compose.yml
+  - path: Dockerfile
+  - path: custom_files/cfg/surf.cfg
+  - path: custom_files/cfg/custom_surf.cfg
+compose_stack_secret_files:
+  - path: .env
+  - path: custom_files/addons/counterstrikesharp/configs/admins.json
+    mode: "0644"
+compose_stack_venv:
+  path: /opt/rcon
+  packages:
+    - rcon==2.4.9
+    - vpk==1.4.0

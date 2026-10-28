@@ -1,0 +1,8 @@
+{% for paragraph in item.value %}
+{% if not loop.first %}
+
+{% endif %}
+{% for key, value in paragraph.items() %}
+{{ key }}: {{ value }}
+{% endfor %}
+{% endfor %}

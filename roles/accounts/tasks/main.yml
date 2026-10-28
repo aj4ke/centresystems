@@ -1,0 +1,50 @@
+---
+- name: Install sudo
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+
+- name: Create automation user
+  ansible.builtin.user:
+    name: "{{ accounts_automation_user }}"
+    shell: /bin/bash
+
+- name: Authorize automation keys
+  ansible.posix.authorized_key:
+    user: "{{ accounts_automation_user }}"
+    key: "{{ accounts_automation_keys | join('\n') }}"
+    exclusive: true
+
+- name: Allow passwordless sudo for automation user
+  ansible.builtin.copy:
+    content: "{{ accounts_automation_user }} ALL=(ALL) NOPASSWD: ALL\n"
+    dest: /etc/sudoers.d/{{ accounts_automation_user }}
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Install extra sudo rules
+  ansible.builtin.copy:
+    content: "{{ item.value }}\n"
+    dest: /etc/sudoers.d/{{ item.key }}
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ accounts_sudo_rules | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Create personal users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    shell: /bin/bash
+  loop: "{{ accounts_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Authorize personal keys
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_keys | join('\n') }}"
+    exclusive: true
+  loop: "{{ accounts_users }}"
+  loop_control:
+    label: "{{ item.name }}"

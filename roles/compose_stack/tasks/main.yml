@@ -1,0 +1,67 @@
+---
+- name: Create stack directories
+  ansible.builtin.file:
+    path: "{{ compose_stack_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ [''] + ((compose_stack_files + compose_stack_secret_files) | map(attribute='path') | map('dirname') | select | unique) }}"
+
+- name: Render stack files
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../stacks/{{ compose_stack_name }}/{{ item.path }}"
+    dest: "{{ compose_stack_dir }}/{{ item.path }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ compose_stack_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: compose_stack_render
+
+- name: Render stack secrets
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../stacks/{{ compose_stack_name }}/{{ item.path }}"
+    dest: "{{ compose_stack_dir }}/{{ item.path }}"
+    mode: "{{ item.mode | default('0600') }}"
+  loop: "{{ compose_stack_secret_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  diff: false
+  no_log: true
+  register: compose_stack_render_secrets
+
+- name: Bring the stack up
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_stack_dir }}"
+    state: present
+    build: "{{ 'always' if (compose_stack_render is changed or compose_stack_render_secrets is changed) else 'policy' }}"
+    pull: missing
+  register: compose_stack_up
+  changed_when: compose_stack_up.actions | default([]) | rejectattr('id', 'in', compose_stack_oneshot_containers) | list | length > 0
+
+- name: Schedule stack jobs
+  ansible.builtin.cron:
+    name: "{{ item.name }}"
+    cron_file: "{{ compose_stack_name }}"
+    user: root
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    job: "{{ item.job }}"
+  loop: "{{ compose_stack_cron }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install venv prerequisites
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-packaging
+    state: present
+  when: compose_stack_venv | length > 0
+  register: compose_stack_venv_prereqs
+
+- name: Install admin tools into a venv
+  ansible.builtin.pip:
+    name: "{{ compose_stack_venv.packages }}"
+    virtualenv: "{{ compose_stack_venv.path }}"
+    virtualenv_command: python3 -m venv
+  when: compose_stack_venv | length > 0 and not (ansible_check_mode and compose_stack_venv_prereqs is changed)

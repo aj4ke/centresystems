@@ -1,0 +1,35 @@
+---
+- name: Initialize community.openwrt
+  ansible.builtin.import_role:
+    name: community.openwrt.init
+
+- name: Install packages
+  community.openwrt.apk:
+    name: "{{ openwrt_packages }}"
+  when: openwrt_packages | length > 0
+
+- name: Install SSH authorized keys
+  community.openwrt.copy:
+    content: "{{ openwrt_authorized_keys | join('\n') }}\n"
+    dest: /etc/dropbear/authorized_keys
+    mode: "0600"
+
+- name: Snapshot /etc/config for rollback
+  community.openwrt.command:
+    cmd: sh -c 'rm -rf {{ openwrt_rollback_dir }} && cp -a /etc/config {{ openwrt_rollback_dir }}'
+  changed_when: false
+
+- name: Render UCI config files
+  community.openwrt.template:
+    src: uci.j2
+    dest: /etc/config/{{ item.key }}
+  loop: "{{ openwrt_uci | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify: Apply OpenWrt config
+
+- name: Remove empty Ansible temp dirs
+  community.openwrt.command:
+    cmd: sh -c 'rmdir /tmp/ansible-tmp-* 2>/dev/null; true'
+  changed_when: false
+  check_mode: false

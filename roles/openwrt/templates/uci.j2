@@ -1,0 +1,21 @@
+{% for section in item.value %}
+
+config {{ section.type }}{{ " '%s'" % section.name if section.name is defined else '' }}
+{% for key, value in (section.options | default({})).items() %}
+{% if value is string or value is number %}
+	option {{ key }} '{{ value | string | replace("'", "'\\''") }}'
+{% else %}
+{% for element in value %}
+	list {{ key }} '{{ element | string | replace("'", "'\\''") }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% if item.key == 'dhcp' %}
+{% for name, ip in openwrt_dns_hosts.items() %}
+
+config domain
+	option name '{{ name }}'
+	option ip '{{ ip }}'
+{% endfor %}
+{% endif %}

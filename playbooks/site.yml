@@ -1,0 +1,9 @@
+---
+- name: Router
+  ansible.builtin.import_playbook: router.yml
+
+- name: Proxmox
+  ansible.builtin.import_playbook: proxmox.yml
+
+- name: VMs
+  ansible.builtin.import_playbook: vms.yml

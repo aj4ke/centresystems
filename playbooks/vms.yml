@@ -1,0 +1,34 @@
+---
+- name: Configure VMs
+  hosts: vms
+  gather_facts: false
+  pre_tasks:
+    - name: Ensure Python is installed
+      ansible.builtin.raw: test -x /usr/bin/python3 || (apt-get update && apt-get install -y python3)
+      register: vms_python
+      changed_when: "'Setting up python3' in vms_python.stdout"
+  roles:
+    - accounts
+    - vm_base
+    - sshd
+    - auto_updates
+    - zabbix_agent
+
+- name: Web
+  hosts: web
+  gather_facts: false
+  roles:
+    - cloudflared
+
+- name: Monitoring
+  hosts: monitoring
+  gather_facts: false
+  roles:
+    - zabbix_server
+
+- name: Game servers
+  hosts: game_servers
+  gather_facts: false
+  roles:
+    - docker
+    - compose_stack

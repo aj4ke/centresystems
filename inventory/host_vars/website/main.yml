@@ -1,0 +1,9 @@
+---
+ansible_host: 192.168.30.30
+
+cloudflared_token: "{{ vault_cloudflared_token }}"
+auto_updates_extra_origins:
+  - origin=cloudflared,label=cloudflared
+
+accounts_sudo_rules:
+  centre-deploy: "github-runner ALL=(root) NOPASSWD: /usr/local/sbin/centre-apply"

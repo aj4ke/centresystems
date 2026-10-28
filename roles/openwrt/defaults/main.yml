@@ -1,0 +1,7 @@
+---
+openwrt_packages: []
+openwrt_authorized_keys: []
+openwrt_uci: {}
+openwrt_dns_hosts: {}
+openwrt_rollback_timeout: 90
+openwrt_rollback_dir: /tmp/ansible-rollback

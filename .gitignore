@@ -1,0 +1,6 @@
+collections/
+*.retry
+.vault-pass*
+.DS_Store
+__pycache__/
+.ansible/

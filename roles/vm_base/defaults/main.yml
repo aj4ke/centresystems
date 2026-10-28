@@ -1,0 +1,9 @@
+---
+vm_base_timezone: Etc/UTC
+vm_base_domain: lan
+vm_base_interface: ens18
+vm_base_gateway: "{{ (ansible_host.split('.')[:3] + ['1']) | join('.') }}"
+vm_base_dns_servers:
+  - "{{ vm_base_gateway }}"
+vm_base_debian_suite: trixie
+vm_base_mounts: []

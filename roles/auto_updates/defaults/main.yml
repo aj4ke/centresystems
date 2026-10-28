@@ -1,0 +1,4 @@
+---
+auto_updates_reboot: false
+auto_updates_reboot_time: "04:30"
+auto_updates_extra_origins: []

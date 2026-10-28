@@ -1,0 +1,56 @@
+---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ pve_node_timezone }}"
+
+- name: Configure APT sources
+  ansible.builtin.template:
+    src: apt.sources.j2
+    dest: /etc/apt/sources.list.d/{{ item.key }}.sources
+    mode: "0644"
+  loop: "{{ pve_node_apt_sources | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ pve_node_packages + pve_node_extra_packages }}"
+    state: present
+
+- name: Configure /etc/hosts
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    mode: "0644"
+
+- name: Configure DNS resolvers
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    mode: "0644"
+
+- name: Snapshot network config for rollback
+  ansible.builtin.copy:
+    src: /etc/network/interfaces
+    dest: /var/backups/interfaces.ansible
+    remote_src: true
+    mode: "0644"
+  changed_when: false
+
+- name: Configure network interfaces
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    mode: "0644"
+  notify: Apply network config
+
+- name: Schedule weekly reboot
+  ansible.builtin.cron:
+    name: Weekly reboot
+    cron_file: weekly-reboot
+    user: root
+    weekday: "{{ pve_node_reboot.weekday }}"
+    hour: "{{ pve_node_reboot.hour }}"
+    minute: "{{ pve_node_reboot.minute }}"
+    job: /usr/sbin/shutdown -r now
+  when: pve_node_reboot | length > 0

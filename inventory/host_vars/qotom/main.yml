@@ -1,0 +1,88 @@
+---
+ansible_host: 10.0.0.116
+
+openwrt_packages:
+  - tailscale
+  - tcpdump
+  - ethtool
+
+openwrt_authorized_keys: "{{ vault_openwrt_authorized_keys }}"
+
+openwrt_dns_hosts: "{{ dict((groups['pve'] + groups['vms']) | sort | zip((groups['pve'] + groups['vms']) | sort | map('extract', hostvars, 'ansible_host'))) }}"
+
+openwrt_uci:
+  network: "{{ openwrt_network }}"
+  firewall: "{{ openwrt_firewall }}"
+  dhcp: "{{ openwrt_dhcp }}"
+  dropbear:
+    - type: dropbear
+      name: main
+      options:
+        enable: '1'
+        PasswordAuth: 'off'
+        RootPasswordAuth: 'off'
+        Port: '22'
+  system:
+    - type: system
+      options:
+        hostname: qotom
+        timezone: EST5EDT,M3.2.0,M11.1.0
+        zonename: America/New_York
+        ttylogin: '0'
+        log_size: '128'
+        urandom_seed: '0'
+    - type: timeserver
+      name: ntp
+      options:
+        enabled: '1'
+        enable_server: '0'
+        server:
+          - 0.openwrt.pool.ntp.org
+          - 1.openwrt.pool.ntp.org
+          - 2.openwrt.pool.ntp.org
+          - 3.openwrt.pool.ntp.org
+  uhttpd:
+    - type: uhttpd
+      name: main
+      options:
+        listen_http:
+          - 0.0.0.0:80
+          - '[::]:80'
+        listen_https:
+          - 0.0.0.0:443
+          - '[::]:443'
+        redirect_https: '0'
+        home: /www
+        rfc1918_filter: '1'
+        max_requests: '3'
+        max_connections: '100'
+        cert: /etc/uhttpd.crt
+        key: /etc/uhttpd.key
+        cgi_prefix: /cgi-bin
+        lua_prefix:
+          - /cgi-bin/luci=/usr/lib/lua/luci/sgi/uhttpd.lua
+        script_timeout: '60'
+        network_timeout: '30'
+        http_keepalive: '20'
+        tcp_keepalive: '1'
+        ubus_prefix: /ubus
+    - type: cert
+      name: defaults
+      options:
+        days: '397'
+        key_type: ec
+        bits: '2048'
+        ec_curve: P-256
+        country: ZZ
+        state: Somewhere
+        location: Unknown
+        commonname: OpenWrt
+  tailscale:
+    - type: settings
+      name: settings
+      options:
+        log_stderr: '1'
+        log_stdout: '1'
+        port: '41641'
+        state_file: /etc/tailscale/tailscaled.state
+        fw_mode: nftables

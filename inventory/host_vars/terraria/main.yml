@@ -1,0 +1,8 @@
+---
+ansible_host: 192.168.30.40
+
+compose_stack_name: terraria
+compose_stack_dir: /root/terraria
+compose_stack_files:
+  - path: docker-compose.yml
+  - path: Dockerfile

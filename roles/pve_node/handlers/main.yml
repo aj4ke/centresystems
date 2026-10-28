@@ -1,0 +1,32 @@
+---
+- name: Arm network rollback
+  listen: Apply network config
+  ansible.builtin.command: >-
+    systemd-run --collect --unit=ansible-network-rollback
+    --on-active={{ pve_node_network_rollback_timeout }}
+    /bin/sh -c 'cp /var/backups/interfaces.ansible /etc/network/interfaces && ifreload -a'
+  changed_when: true
+
+- name: Reload network
+  listen: Apply network config
+  ansible.builtin.command: ifreload -a
+  changed_when: true
+
+- name: Confirm node is reachable and quorate over a new SSH session
+  listen: Apply network config
+  ansible.builtin.command: >-
+    ssh -o ControlPath=none -o BatchMode=yes -o ConnectTimeout=5
+    {{ ansible_user }}@{{ ansible_host }} 'pvecm status | grep -q "Quorate:.*Yes"'
+  delegate_to: localhost
+  register: pve_node_confirm
+  retries: 6
+  delay: 5
+  until: pve_node_confirm.rc == 0
+  changed_when: false
+
+- name: Disarm network rollback
+  listen: Apply network config
+  ansible.builtin.systemd:
+    name: ansible-network-rollback.timer
+    state: stopped
+  when: not ansible_check_mode

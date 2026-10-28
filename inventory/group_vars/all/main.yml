@@ -1,0 +1,5 @@
+---
+lab_domain: centresystems.internal
+
+zabbix_agent_server: 192.168.20.10
+zabbix_agent_host_metadata: linux-vm

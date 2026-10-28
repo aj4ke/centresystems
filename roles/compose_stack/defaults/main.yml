@@ -1,0 +1,8 @@
+---
+compose_stack_name: ""
+compose_stack_dir: ""
+compose_stack_files: []
+compose_stack_secret_files: []
+compose_stack_oneshot_containers: []
+compose_stack_cron: []
+compose_stack_venv: {}

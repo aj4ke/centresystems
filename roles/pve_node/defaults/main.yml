@@ -1,0 +1,12 @@
+---
+pve_node_timezone: Etc/UTC
+pve_node_domain: lan
+pve_node_dns_search: ""
+pve_node_dns_servers: []
+pve_node_interfaces: []
+pve_node_interfaces_source: true
+pve_node_packages: []
+pve_node_extra_packages: []
+pve_node_apt_sources: {}
+pve_node_network_rollback_timeout: 120
+pve_node_reboot: {}

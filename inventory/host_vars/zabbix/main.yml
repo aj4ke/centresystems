@@ -1,0 +1,8 @@
+---
+ansible_host: 192.168.20.10
+
+zabbix_agent_server: 127.0.0.1
+zabbix_agent_hostname: Zabbix server
+
+zabbix_server_db_password: "{{ vault_zabbix_db_password }}"
+zabbix_server_frontend_name: "{{ inventory_hostname }}.{{ lab_domain }}"

@@ -1,0 +1,97 @@
+---
+pve_cluster_vms:
+  - vmid: 100
+    node: pve-a
+    config:
+      name: website
+      boot: order=scsi0;ide2;net0
+      cores: 1
+      cpu: x86-64-v2-AES
+      memory: '2048'
+      net0: virtio=BC:24:11:66:99:F2,bridge=vmbr0,tag=30
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: service
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-100-disk-0,iothread=1,size=8G
+  - vmid: 101
+    node: centresrv-pve
+    config:
+      name: ark
+      allow-ksm: 0
+      boot: order=scsi0;ide2;net0
+      cores: 6
+      cpu: host
+      memory: '16384'
+      net0: virtio=BC:24:11:83:6D:69,bridge=vmbr0,tag=30
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: game
+      vcpus: 6
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-101-disk-0,iothread=1,size=64G
+  - vmid: 102
+    node: centresrv-pve
+    config:
+      name: cs2
+      allow-ksm: 0
+      balloon: 0
+      boot: order=scsi0;ide2;net0
+      cores: 4
+      cpu: host
+      memory: '8192'
+      net0: virtio=BC:24:11:0D:80:3B,bridge=vmbr0,tag=30
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: game
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-102-disk-0,discard=on,iothread=1,size=80G
+      scsi1: tank:vm-102-disk-1,discard=on,iothread=1,size=200G
+  - vmid: 103
+    node: thinkpad-proxmox
+    config:
+      name: zabbix
+      boot: order=scsi0;ide2;net0
+      cores: 2
+      cpu: x86-64-v2-AES
+      memory: '8192'
+      net0: virtio=BC:24:11:86:CE:A7,bridge=vmbr0,tag=20
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: service
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-103-disk-0,iothread=1,size=64G
+  - vmid: 104
+    node: centresrv-pve
+    config:
+      name: terraria
+      boot: order=scsi0;ide2;net0
+      cores: 2
+      cpu: x86-64-v2-AES
+      memory: '6144'
+      net0: virtio=BC:24:11:A2:A4:7B,bridge=vmbr0,tag=30
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: game
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-104-disk-0,iothread=1,size=20G

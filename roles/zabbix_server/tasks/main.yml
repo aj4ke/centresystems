@@ -1,0 +1,66 @@
+---
+- name: Configure PostgreSQL (PGDG) APT source
+  ansible.builtin.copy:
+    src: pgdg.sources
+    dest: /etc/apt/sources.list.d/pgdg.sources
+    mode: "0644"
+
+- name: Install Zabbix server, frontend and PostgreSQL
+  ansible.builtin.apt:
+    name:
+      - postgresql-{{ zabbix_server_postgresql_version }}
+      - zabbix-server-pgsql
+      - zabbix-frontend-php
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - php{{ zabbix_server_php_version }}-pgsql
+    state: present
+
+- name: Configure Zabbix server database connection
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  loop: "{{ zabbix_server_db | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  vars:
+    zabbix_server_db:
+      DBName: "{{ zabbix_server_db_name }}"
+      DBUser: "{{ zabbix_server_db_user }}"
+      DBPassword: "{{ zabbix_server_db_password }}"
+  diff: false
+  no_log: true
+  notify: Restart Zabbix server
+
+- name: Configure frontend database password
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/web/zabbix.conf.php
+    regexp: "^\\$DB\\['PASSWORD'\\]"
+    line: "$DB['PASSWORD']\t\t\t= '{{ zabbix_server_db_password }}';"
+  diff: false
+  no_log: true
+
+- name: Configure frontend name
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/web/zabbix.conf.php
+    regexp: "^\\$ZBX_SERVER_NAME"
+    line: "$ZBX_SERVER_NAME\t\t= '{{ zabbix_server_frontend_name }}';"
+
+- name: Configure nginx server name
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/nginx.conf
+    regexp: "^\\s*server_name\\s"
+    line: "        server_name     {{ zabbix_server_frontend_name }};"
+  notify: Reload nginx
+
+- name: Enable services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - postgresql
+    - zabbix-server
+    - php{{ zabbix_server_php_version }}-fpm
+    - nginx

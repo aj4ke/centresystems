@@ -1,0 +1,14 @@
+services:
+  cs2:
+    build: .
+    image: cs2-local
+    container_name: cs2
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "27015:27015/tcp"
+      - "27015:27015/udp"
+      - "27020:27020/udp"
+    volumes:
+      - ./cs2:/home/steam/cs2
+      - ./custom_files:/home/custom_files

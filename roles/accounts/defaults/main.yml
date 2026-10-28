@@ -1,0 +1,5 @@
+---
+accounts_automation_user: ansible
+accounts_automation_keys: []
+accounts_users: []
+accounts_sudo_rules: {}

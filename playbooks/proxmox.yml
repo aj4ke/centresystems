@@ -1,0 +1,17 @@
+---
+- name: Configure Proxmox nodes
+  hosts: pve
+  serial: 1
+  any_errors_fatal: true
+  gather_facts: false
+  roles:
+    - pve_node
+    - sshd
+    - auto_updates
+    - zabbix_agent
+
+- name: Configure Proxmox cluster
+  hosts: pve[0]
+  gather_facts: false
+  roles:
+    - pve_cluster

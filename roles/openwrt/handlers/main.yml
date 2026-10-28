@@ -1,0 +1,41 @@
+---
+- name: Arm config rollback
+  listen: Apply OpenWrt config
+  community.openwrt.command:
+    cmd: touch {{ openwrt_rollback_dir }}.armed
+  changed_when: true
+
+- name: Start rollback timer
+  listen: Apply OpenWrt config
+  community.openwrt.nohup:
+    delay: "{{ openwrt_rollback_timeout }}"
+    command: >-
+      [ -f {{ openwrt_rollback_dir }}.armed ] &&
+      cp {{ openwrt_rollback_dir }}/* /etc/config/ &&
+      rm -f {{ openwrt_rollback_dir }}.armed &&
+      reload_config &&
+      logger -t ansible "unconfirmed config change rolled back"
+
+- name: Reload changed services
+  listen: Apply OpenWrt config
+  community.openwrt.command:
+    cmd: reload_config
+  changed_when: true
+
+- name: Confirm router is reachable over a new SSH session
+  listen: Apply OpenWrt config
+  ansible.builtin.command: >-
+    ssh -o ControlPath=none -o BatchMode=yes -o ConnectTimeout=5
+    {{ ansible_user }}@{{ ansible_host }} true
+  delegate_to: localhost
+  register: openwrt_confirm
+  retries: 6
+  delay: 5
+  until: openwrt_confirm.rc == 0
+  changed_when: false
+
+- name: Disarm config rollback
+  listen: Apply OpenWrt config
+  community.openwrt.command:
+    cmd: rm -f {{ openwrt_rollback_dir }}.armed
+  changed_when: true

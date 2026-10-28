@@ -1,0 +1,100 @@
+---
+openwrt_network:
+  - type: interface
+    name: loopback
+    options:
+      device: lo
+      proto: static
+      ipaddr:
+        - 127.0.0.1/8
+  - type: globals
+    name: globals
+    options:
+      dhcp_default_duid: 0004788ff41921be49209c97c643b76cee81
+      ula_prefix: fdc3:88ca:a0ca::/48
+  - type: device
+    options:
+      name: br-lan
+      type: bridge
+      ports:
+        - eth1
+        - eth2
+        - eth3
+        - eth4
+  - type: interface
+    name: lan
+    options:
+      device: br-lan.10
+      proto: static
+      ipaddr:
+        - 192.168.1.1/24
+      ip6assign: '60'
+  - type: interface
+    name: wan
+    options:
+      device: eth0
+      proto: dhcp
+  - type: interface
+    name: wan6
+    options:
+      device: eth0
+      proto: dhcpv6
+  - type: bridge-vlan
+    options:
+      device: br-lan
+      vlan: '10'
+      ports:
+        - eth1:u*
+        - eth2:u*
+        - eth3:u*
+        - eth4:u*
+  - type: bridge-vlan
+    options:
+      device: br-lan
+      vlan: '20'
+      ports:
+        - eth1:t
+        - eth2:t
+        - eth3:t
+        - eth4:t
+  - type: bridge-vlan
+    options:
+      device: br-lan
+      vlan: '30'
+      ports:
+        - eth1:t
+        - eth2:t
+        - eth3:t
+        - eth4:t
+  - type: bridge-vlan
+    options:
+      device: br-lan
+      vlan: '40'
+      ports:
+        - eth1:t
+        - eth2:t
+        - eth3:t
+        - eth4:t
+  - type: interface
+    name: services
+    options:
+      proto: static
+      device: br-lan.20
+      ipaddr: 192.168.20.1/24
+  - type: interface
+    name: public
+    options:
+      proto: static
+      device: br-lan.30
+      ipaddr: 192.168.30.1/24
+  - type: interface
+    name: lab
+    options:
+      proto: static
+      device: br-lan.40
+      ipaddr: 192.168.40.1/24
+  - type: interface
+    name: tailscale
+    options:
+      proto: none
+      device: tailscale0

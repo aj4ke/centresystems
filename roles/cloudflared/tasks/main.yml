@@ -1,0 +1,59 @@
+---
+- name: Install Cloudflare repository key
+  ansible.builtin.get_url:
+    url: https://pkg.cloudflare.com/cloudflare-main.gpg
+    dest: /usr/share/keyrings/cloudflare-main.gpg
+    checksum: "{{ cloudflared_repo_key_checksum }}"
+    mode: "0644"
+
+- name: Configure Cloudflare APT source
+  ansible.builtin.copy:
+    content: |
+      Types: deb
+      URIs: https://pkg.cloudflare.com/cloudflared
+      Suites: any
+      Components: main
+      Signed-By: /usr/share/keyrings/cloudflare-main.gpg
+    dest: /etc/apt/sources.list.d/cloudflared.sources
+    mode: "0644"
+  register: cloudflared_source
+
+- name: Remove legacy Cloudflare APT list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/cloudflared.list
+    state: absent
+
+- name: Install cloudflared
+  ansible.builtin.apt:
+    name: cloudflared
+    state: present
+    update_cache: "{{ cloudflared_source is changed }}"
+
+- name: Create config directory
+  ansible.builtin.file:
+    path: /etc/cloudflared
+    state: directory
+    mode: "0755"
+
+- name: Install tunnel token
+  ansible.builtin.copy:
+    content: "{{ cloudflared_token }}"
+    dest: /etc/cloudflared/token
+    mode: "0600"
+  diff: false
+  no_log: true
+  notify: Restart cloudflared
+
+- name: Install systemd unit
+  ansible.builtin.copy:
+    src: cloudflared.service
+    dest: /etc/systemd/system/cloudflared.service
+    mode: "0644"
+  notify: Restart cloudflared
+
+- name: Enable tunnel
+  ansible.builtin.systemd:
+    name: cloudflared
+    state: started
+    enabled: true
+    daemon_reload: true

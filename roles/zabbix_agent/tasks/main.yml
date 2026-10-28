@@ -1,0 +1,40 @@
+---
+- name: Remove the other Zabbix agent variant
+  ansible.builtin.apt:
+    name: "{{ 'zabbix-agent' if zabbix_agent_package == 'zabbix-agent2' else 'zabbix-agent2' }}"
+    state: absent
+    purge: true
+
+- name: Install Zabbix agent
+  ansible.builtin.apt:
+    name: "{{ zabbix_agent_package }}"
+    state: present
+  register: zabbix_agent_install
+
+- name: Configure and start Zabbix agent
+  when: not (ansible_check_mode and zabbix_agent_install is changed)
+  block:
+    - name: Configure Zabbix agent
+      ansible.builtin.lineinfile:
+        path: "{{ zabbix_agent_config }}"
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+      loop: "{{ zabbix_agent_settings | dict2items }}"
+      vars:
+        zabbix_agent_settings: >-
+          {{ {'Server': zabbix_agent_server, 'ServerActive': zabbix_agent_server, 'HostMetadata': zabbix_agent_host_metadata}
+             | combine({'Hostname': zabbix_agent_hostname} if zabbix_agent_hostname else {'HostnameItem': 'system.hostname'}) }}
+      notify: Restart Zabbix agent
+
+    - name: Remove the unused hostname setting
+      ansible.builtin.lineinfile:
+        path: "{{ zabbix_agent_config }}"
+        regexp: "^{{ 'HostnameItem' if zabbix_agent_hostname else 'Hostname' }}="
+        state: absent
+      notify: Restart Zabbix agent
+
+    - name: Enable Zabbix agent
+      ansible.builtin.service:
+        name: "{{ zabbix_agent_package }}"
+        state: started
+        enabled: true

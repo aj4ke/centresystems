@@ -1,0 +1,6 @@
+---
+- name: Restart Zabbix agent
+  listen: Hostname changed
+  ansible.builtin.service:
+    name: "{{ zabbix_agent_package }}"
+    state: restarted

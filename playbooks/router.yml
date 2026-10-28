@@ -1,0 +1,6 @@
+---
+- name: Configure OpenWrt router
+  hosts: router
+  gather_facts: false
+  roles:
+    - openwrt

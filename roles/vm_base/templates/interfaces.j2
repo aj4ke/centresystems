@@ -1,0 +1,9 @@
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+auto {{ vm_base_interface }}
+iface {{ vm_base_interface }} inet static
+	address {{ ansible_host }}/24
+	gateway {{ vm_base_gateway }}

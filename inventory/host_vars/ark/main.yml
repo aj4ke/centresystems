@@ -1,0 +1,26 @@
+---
+ansible_host: 192.168.30.10
+
+compose_stack_name: ark
+compose_stack_dir: /root/asa-server
+compose_stack_files:
+  - path: docker-compose.yml
+compose_stack_oneshot_containers:
+  - asa-server-set-permissions-1-1
+compose_stack_cron:
+  - name: Prune ARK save backups older than a day
+    minute: "15"
+    job: >-
+      find /var/lib/docker/volumes/asa-server_server-files-1/_data/ShooterGame/Saved/SavedArks -type f
+      \( -name '*_[0-9][0-9].[0-9][0-9].[0-9][0-9][0-9][0-9]_*.ark' -o -name '*.profilebak' -o -name '*.tribebak' \)
+      -mmin +1440 -delete
+  - name: Warn players before the weekly host reboot
+    minute: "50"
+    hour: "2"
+    weekday: "0"
+    job: docker exec asa-server-1 asa-ctrl rcon --exec 'serverchat Restart in 10 minutes'
+  - name: Save the world before the weekly host reboot
+    minute: "58"
+    hour: "2"
+    weekday: "0"
+    job: docker exec asa-server-1 asa-ctrl rcon --exec 'saveworld'

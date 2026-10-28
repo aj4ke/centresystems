@@ -1,0 +1,15 @@
+{% for iface in pve_node_interfaces %}
+{% if iface.auto | default(false) %}
+auto {{ iface.name }}
+{% endif %}
+iface {{ iface.name }} {{ iface.family | default('inet') }} {{ iface.method }}
+{% for key, value in (iface.options | default({})).items() %}
+	{{ key }} {{ value }}
+{% endfor %}
+{% if not loop.last or pve_node_interfaces_source %}
+
+{% endif %}
+{% endfor %}
+{% if pve_node_interfaces_source %}
+source /etc/network/interfaces.d/*
+{% endif %}
