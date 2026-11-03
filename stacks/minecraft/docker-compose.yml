@@ -16,6 +16,7 @@ services:
       VERSION: "1.20.1"
       FORGE_VERSION: "47.4.2"
       GENERIC_PACK: "https://mediafilez.forgecdn.net/files/6710/449/Remain%20Server%20Pack%20v18.zip"
+      GENERIC_PACKS_DISABLE_MODS: "smoothchunk-1.20.1-4.1.jar"
       CURSEFORGE_FILES: "chunky-pregenerator-forge:5320028,async-locator:4603343,night-config-fixes:4614068"
       OPS: "aj4ke"
       WHITELIST: "ajake1112"
