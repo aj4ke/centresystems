@@ -339,6 +339,17 @@ openwrt_firewall:
       dest_port: '10051'
       target: ACCEPT
   - type: rule
+    name: web_to_zbx_api
+    options:
+      name: web-to-zabbix-api
+      src: public
+      src_ip: 192.168.30.30
+      dest: services
+      dest_ip: 192.168.20.10
+      proto: tcp
+      dest_port: '8080'
+      target: ACCEPT
+  - type: rule
     name: lab_to_zbx
     options:
       name: lab-to-zabbix
