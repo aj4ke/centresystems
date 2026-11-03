@@ -1,0 +1,25 @@
+---
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 2d37cd1db3284a30a154ceceea21dbcc
+      template: game-server
+      name: game-server
+      groups:
+        - name: Templates
+      items:
+        - uuid: 95df14923fab439ca4155906a3775b54
+          name: Game Server Players
+          type: ZABBIX_PASSIVE
+          key: game.players
+          delay: 1m
+          history: 31d
+          trends: 365d
+          value_type: UNSIGNED
+          units: players
+          tags:
+            - tag: component
+              value: players

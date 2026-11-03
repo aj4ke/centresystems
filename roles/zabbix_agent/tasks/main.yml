@@ -5,14 +5,27 @@
     state: absent
     purge: true
 
+- name: Install the Zabbix APT repository
+  ansible.builtin.apt:
+    deb: "{{ zabbix_agent_release_deb }}"
+  register: zabbix_agent_release
+
 - name: Install Zabbix agent
   ansible.builtin.apt:
-    name: "{{ zabbix_agent_package }}"
+    name: "{{ zabbix_agent_package }}={{ zabbix_agent_version }}"
+    update_cache: "{{ zabbix_agent_release is changed }}"
     state: present
+  when: not (ansible_check_mode and zabbix_agent_release is changed)
   register: zabbix_agent_install
 
+- name: Install packages used by agent checks
+  ansible.builtin.apt:
+    name: "{{ zabbix_agent_extra_packages }}"
+    state: present
+  when: zabbix_agent_extra_packages | length > 0
+
 - name: Configure and start Zabbix agent
-  when: not (ansible_check_mode and zabbix_agent_install is changed)
+  when: not (ansible_check_mode and (zabbix_agent_release is changed or zabbix_agent_install is changed))
   block:
     - name: Configure Zabbix agent
       ansible.builtin.lineinfile:
@@ -22,7 +35,8 @@
       loop: "{{ zabbix_agent_settings | dict2items }}"
       vars:
         zabbix_agent_settings: >-
-          {{ {'Server': zabbix_agent_server, 'ServerActive': zabbix_agent_server, 'HostMetadata': zabbix_agent_host_metadata}
+          {{ {'Server': zabbix_agent_server, 'ServerActive': zabbix_agent_server, 'HostMetadata': zabbix_agent_host_metadata,
+              'Include': zabbix_agent_include_dir ~ '/*.conf'}
              | combine({'Hostname': zabbix_agent_hostname} if zabbix_agent_hostname else {'HostnameItem': 'system.hostname'}) }}
       notify: Restart Zabbix agent
 
@@ -31,6 +45,29 @@
         path: "{{ zabbix_agent_config }}"
         regexp: "^{{ 'HostnameItem' if zabbix_agent_hostname else 'Hostname' }}="
         state: absent
+      notify: Restart Zabbix agent
+
+    - name: Create Zabbix agent directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ zabbix_agent_include_dir }}"
+        - "{{ zabbix_agent_scripts_dir }}"
+
+    - name: Install Zabbix agent scripts
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ zabbix_agent_scripts_dir }}/{{ item }}"
+        mode: "0755"
+      loop: "{{ zabbix_agent_scripts }}"
+
+    - name: Configure user parameters
+      ansible.builtin.template:
+        src: userparameters.conf.j2
+        dest: "{{ zabbix_agent_include_dir }}/userparameters.conf"
+        mode: "0644"
       notify: Restart Zabbix agent
 
     - name: Enable Zabbix agent

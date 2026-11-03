@@ -24,3 +24,7 @@ compose_stack_venv:
   packages:
     - rcon==2.4.9
     - vpk==1.4.0
+
+zabbix_agent_user_parameters:
+  - key: game.players
+    command: /etc/zabbix/scripts/game_players.py source 127.0.0.1 27015

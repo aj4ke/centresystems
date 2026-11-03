@@ -1,0 +1,4 @@
+---
+zabbix_agent_scripts:
+  - game_players.py
+zabbix_agent_host_metadata: linux-vm game-server

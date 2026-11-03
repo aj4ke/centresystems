@@ -1,0 +1,3 @@
+{% for param in zabbix_agent_user_parameters %}
+UserParameter={{ param.key }},{{ param.command }}
+{% endfor %}

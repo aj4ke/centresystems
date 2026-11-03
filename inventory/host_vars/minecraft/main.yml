@@ -19,3 +19,7 @@ compose_stack_cron:
     hour: "2"
     weekday: "0"
     job: docker exec minecraft rcon-cli save-all flush
+
+zabbix_agent_user_parameters:
+  - key: game.players
+    command: /etc/zabbix/scripts/game_players.py minecraft 127.0.0.1 25565
