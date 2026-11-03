@@ -274,16 +274,16 @@ openwrt_firewall:
       proto: tcp
       dest_port: '10050'
       target: ACCEPT
-  - type: redirect
-    options:
-      name: ark-game
-      target: DNAT
-      src: wan
-      src_dport: '7777'
-      dest: public
-      dest_ip: 192.168.30.10
-      dest_port: '7777'
-      proto: udp
+  # - type: redirect
+  #   options:
+  #     name: ark-game
+  #     target: DNAT
+  #     src: wan
+  #     src_dport: '7777'
+  #     dest: public
+  #     dest_ip: 192.168.30.10
+  #     dest_port: '7777'
+  #     proto: udp
   - type: zone
     options:
       name: tailscale
@@ -356,5 +356,15 @@ openwrt_firewall:
       dest: public
       dest_ip: 192.168.30.40
       dest_port: '7778'
+      proto: tcp
+      target: DNAT
+  - type: redirect
+    options:
+      name: Minecraft
+      src: wan
+      src_dport: '25565'
+      dest: public
+      dest_ip: 192.168.30.50
+      dest_port: '25565'
       proto: tcp
       target: DNAT

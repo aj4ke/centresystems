@@ -1,0 +1,16 @@
+{
+  "patches": [
+    {
+      "file": "/data/config/servercore/config.yml",
+      "ops": [
+        {
+          "$set": {
+            "path": "$.dynamic['dynamic-settings'][?(@.setting == 'VIEW_DISTANCE')].max",
+            "value": 16,
+            "value-type": "int"
+          }
+        }
+      ]
+    }
+  ]
+}

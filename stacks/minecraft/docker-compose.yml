@@ -1,0 +1,37 @@
+services:
+  minecraft:
+    image: "itzg/minecraft-server:java17@sha256:70a94e9df041711f118a914cd4ee028ddfb80afdde079e213f8c22d2e531ff95"
+    container_name: minecraft
+    ports:
+      - "25565:25565/tcp"
+    volumes:
+      - ./data:/data
+      - ./patches:/patches:ro
+    env_file: .env
+    environment:
+      EULA: "TRUE"
+      UID: "25565"
+      GID: "25565"
+      TYPE: "FORGE"
+      VERSION: "1.20.1"
+      FORGE_VERSION: "47.4.2"
+      GENERIC_PACK: "https://mediafilez.forgecdn.net/files/6710/449/Remain%20Server%20Pack%20v18.zip"
+      CURSEFORGE_FILES: "chunky-pregenerator-forge:5320028,async-locator:4603343,night-config-fixes:4614068"
+      OPS: "aj4ke"
+      WHITELIST: "ajake1112"
+      RCON_CMDS_STARTUP: |-
+        chunky continue
+      PATCH_DEFINITIONS: "/patches/servercore.json"
+      MEMORY: "12G"
+      USE_AIKAR_FLAGS: "true"
+      MOTD: "Remain"
+      MAX_PLAYERS: "8"
+      DIFFICULTY: "normal"
+      VIEW_DISTANCE: "16"
+      ENABLE_ROLLING_LOGS: "true"
+      TZ: "America/New_York"
+      SEED: "9223372036854775807"
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+    stop_grace_period: 60s

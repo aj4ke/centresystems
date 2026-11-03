@@ -4,3 +4,4 @@ collections/
 .DS_Store
 __pycache__/
 .ansible/
+stacks/minecraft/data/

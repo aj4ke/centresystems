@@ -29,7 +29,8 @@ pve_cluster_vms:
       memory: '16384'
       net0: virtio=BC:24:11:83:6D:69,bridge=vmbr0,tag=30
       numa: 0
-      onboot: 1
+      # onboot: 1
+      onboot: 0
       ostype: l26
       scsihw: virtio-scsi-single
       sockets: 1
@@ -95,3 +96,23 @@ pve_cluster_vms:
     disks:
       ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
       scsi0: tank:vm-104-disk-0,iothread=1,size=20G
+  - vmid: 105
+    node: centresrv-pve
+    config:
+      name: minecraft
+      allow-ksm: 0
+      balloon: 0
+      boot: order=scsi0;ide2;net0
+      cores: 4
+      cpu: host
+      memory: '16384'
+      net0: virtio=BC:24:11:3B:DA:1E,bridge=vmbr0,tag=30
+      numa: 0
+      onboot: 1
+      ostype: l26
+      scsihw: virtio-scsi-single
+      sockets: 1
+      tags: game
+    disks:
+      ide2: local:iso/debian-13.7.0-amd64-netinst.iso,media=cdrom,size=756M
+      scsi0: tank:vm-105-disk-0,iothread=1,size=64G

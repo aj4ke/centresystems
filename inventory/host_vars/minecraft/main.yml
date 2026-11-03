@@ -1,0 +1,21 @@
+---
+ansible_host: 192.168.30.50
+
+compose_stack_name: minecraft
+compose_stack_dir: /opt/minecraft
+compose_stack_files:
+  - path: docker-compose.yml
+  - path: patches/servercore.json
+compose_stack_secret_files:
+  - path: .env
+compose_stack_cron:
+  - name: Warn players before the weekly host reboot
+    minute: "50"
+    hour: "2"
+    weekday: "0"
+    job: docker exec minecraft rcon-cli say Restart in 10 minutes
+  - name: Save the world before the weekly host reboot
+    minute: "58"
+    hour: "2"
+    weekday: "0"
+    job: docker exec minecraft rcon-cli save-all flush
