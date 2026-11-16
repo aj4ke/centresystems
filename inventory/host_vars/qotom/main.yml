@@ -1,5 +1,6 @@
 ---
 ansible_host: 10.0.0.116
+openwrt_ssh_transfer_method: piped
 
 openwrt_packages:
   - tailscale

@@ -21,6 +21,8 @@ openwrt_firewall:
       network:
         - wan
         - wan6
+      device:
+        - xdptap0
       input: REJECT
       output: ACCEPT
       forward: DROP
